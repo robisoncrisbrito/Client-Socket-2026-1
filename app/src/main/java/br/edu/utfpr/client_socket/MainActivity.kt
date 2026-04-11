@@ -59,13 +59,12 @@ class MainActivity : AppCompatActivity() {
                     btEnviar.isEnabled = false
                 }
 
-                Thread.sleep( 1000 )
+                Thread.sleep(1000)
 
 
                 if ( ! ::clientSocket.isInitialized ) {
-
-                    val ip = "10.0.2.2"
-                    val port = 12345
+                    val ip = BuildConfig.SERVER_IP
+                    val port = BuildConfig.SERVER_PORT
 
                     clientSocket = Socket(ip, port) //linha é bloqueante ou dará exceção
                     //Conectado com o Server

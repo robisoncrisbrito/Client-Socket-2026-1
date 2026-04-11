@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -10,14 +12,32 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
-        applicationId = "br.edu.utfpr.client_socket"
+        applicationId = "br.edu.utfpr.client_soccket"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
+        val properties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(localPropertiesFile.inputStream())
+        }
+
+        buildConfigField("String", "SERVER_IP", "\"${properties.getProperty("server.ip")}\"")
+        buildConfigField("int", "SERVER_PORT", properties.getProperty("server.port") ?: "12345")
+
+
+
+
     }
 
     buildTypes {

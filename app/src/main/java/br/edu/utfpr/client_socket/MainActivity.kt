@@ -1,5 +1,6 @@
 package br.edu.utfpr.client_socket
 
+import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -51,16 +52,27 @@ class MainActivity : AppCompatActivity() {
 
     fun btEnviarOnClick(view: View) {
 
-        Thread {
+        val protocol = if ( rbData.isChecked) "data" else "hora"
+        ConexaoTask().execute(protocol)
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+        clientSocket.close()
+    }
+
+    inner class ConexaoTask: AsyncTask<String, Int, String>() {
+
+        override fun onPreExecute() {
+            progressBar.visibility = View.VISIBLE
+            btEnviar.isEnabled = false
+        }
+
+        override fun doInBackground(vararg protocol: String?): String? {
+
             try {
-
-                runOnUiThread {
-                    progressBar.visibility = View.VISIBLE
-                    btEnviar.isEnabled = false
-                }
-
                 Thread.sleep(1000)
-
 
                 if ( ! ::clientSocket.isInitialized ) {
                     val ip = BuildConfig.SERVER_IP
@@ -76,42 +88,29 @@ class MainActivity : AppCompatActivity() {
                     //Fluxo de IO Criado
                 }
 
-                var protocol = ""
 
-                when ( rbHora.isChecked ) {
-                    true -> protocol = "hora"
-                    false -> protocol = "data"
-                }
-
-                outputStream.write( protocol + "\n")
+                outputStream.write( protocol[0] + "\n")
                 outputStream.flush()
                 //Mensagem enviada ao servidor, sem bloqueios
 
                 val result = inputStream.readLine() //linha bloqueante
                 //mensagem recebida do servidor
 
-                runOnUiThread {
-                    tvResultado.text = result
-                }
+                return result
 
-
-            } catch ( e: Exception ) {
-                runOnUiThread {
-                    tvResultado.text = "Erro: " + e.message
-                }
-
+            } catch (e: Exception ) {
+                return e.message
             }
 
-            runOnUiThread {
-                progressBar.visibility = View.GONE
-                btEnviar.isEnabled = true
-            }
+        }
 
-        }.start()
+        override fun onPostExecute(result: String?) {
+            tvResultado.text = result
+            progressBar.visibility = View.GONE
+            btEnviar.isEnabled = true
+        }
+
     }
 
-    override fun onStop() {
-        super.onStop()
-        clientSocket.close()
-    }
-}
+
+} //fim da MainActivity

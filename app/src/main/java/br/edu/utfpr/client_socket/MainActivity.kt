@@ -1,13 +1,8 @@
 package br.edu.utfpr.client_socket
 
-import android.os.AsyncTask
+import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.RadioButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -19,20 +14,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.BufferedWriter
-import java.io.Reader
 import java.net.Socket
 import java.nio.charset.Charset
-import kotlin.plus
+import java.util.Timer
+import java.util.TimerTask
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var tvResultado: TextView
 
-    private lateinit var clientSocket: Socket
-    private lateinit var inputStream: BufferedReader
-    private lateinit var outputStream: BufferedWriter
-
-
+    private var horaini: Long = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,59 +41,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launch {
-            conexaoTask( "hora" )
-        }
+
+        val service = Intent( this, MyService::class.java)
+        startService(service)
+
     }
 
 
     override fun onStop() {
         super.onStop()
-        clientSocket.close()
     }
-
-    suspend fun conexaoTask(protocol: String) {
-
-        while(true) {
-
-            var result = ""
-
-            withContext(Dispatchers.IO) {
-                try {
-
-                    delay(1000)
-
-                    if (!::clientSocket.isInitialized) {
-                        val ip = BuildConfig.SERVER_IP
-                        val port = BuildConfig.SERVER_PORT
-
-                        clientSocket = Socket(ip, port) //linha é bloqueante ou dará exceção
-                        //Conectado com o Server
-
-                        outputStream =
-                            clientSocket.getOutputStream().bufferedWriter(Charset.forName("utf-8"))
-                        inputStream =
-                            clientSocket.getInputStream().bufferedReader(Charset.forName("utf-8"))
-                        //Fluxo de IO Criado
-                    }
-
-
-                    outputStream.write(protocol + "\n")
-                    outputStream.flush()
-                    //Mensagem enviada ao servidor, sem bloqueios
-
-                    result = inputStream.readLine() //linha bloqueante
-                    //mensagem recebida do servidor
-                } catch (e: Exception) {
-                    result = e.message.toString()
-                }
-            } //fim do Dispatchers.IO
-
-
-            withContext(Dispatchers.Main) {
-                tvResultado.text = result
-            }
-        } //fim do while true
-    } //fim conexaoTask
 
 } //fim da MainActivity
